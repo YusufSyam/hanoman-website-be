@@ -3,6 +3,9 @@ import { withPayload } from '@payloadcms/next/withPayload'
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Your Next.js config here
+  serverActions: {
+    bodySizeLimit: '50mb', // Increase limit for image uploads
+  },
   webpack: (webpackConfig) => {
     webpackConfig.resolve.extensionAlias = {
       '.cjs': ['.cts', '.cjs'],
