@@ -7,6 +7,9 @@ export const Careers: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'jobCategory', 'isUrgentlyHiring'],
   },
+  access: {
+    read: () => true,
+  },
   fields: [
     {
       name: 'title',
@@ -17,8 +20,6 @@ export const Careers: CollectionConfig = {
     slugField({
       name: 'slug',
       fieldToUse: 'title',
-      localized: false,
-      unique: true,
     }),
     {
       name: 'image',

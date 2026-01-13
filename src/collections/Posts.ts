@@ -7,6 +7,9 @@ export const Posts: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'type', 'category', 'publishedDate'],
   },
+  access: {
+    read: () => true,
+  },
   fields: [
     {
       name: 'type',
@@ -40,8 +43,6 @@ export const Posts: CollectionConfig = {
     slugField({
       name: 'slug',
       fieldToUse: 'title',
-      localized: false,
-      unique: true,
     }),
     {
       name: 'image',

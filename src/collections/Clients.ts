@@ -6,6 +6,9 @@ export const Clients: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'category', 'href'],
   },
+  access: {
+    read: () => true,
+  },
   fields: [
     {
       name: 'name',
