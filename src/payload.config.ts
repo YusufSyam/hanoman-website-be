@@ -39,7 +39,7 @@ export default buildConfig({
   csrf: ['http://localhost:3000'],
   plugins: [
     vercelBlobStorage({
-      enabled: true,
+      enabled: process.env.NODE_ENV === 'test',
       collections: {
         media: true, // Aktifkan untuk collection 'media'
       },
