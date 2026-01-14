@@ -27,8 +27,8 @@ export default async function HomePage() {
             width={65}
           />
         </picture>
-        {!user && <h1>Welcome to your new project.</h1>}
-        {user && <h1>Welcome back, {user.email}</h1>}
+        {!user && <h1>Welcome to Hanoman Website Data Management.</h1>}
+        {user && <h2 style={{textAlign:'center'}}>Welcome back to Hanoman Website Data Management, {user.email}</h2>}
         <div className="links">
           <a
             className="admin"
