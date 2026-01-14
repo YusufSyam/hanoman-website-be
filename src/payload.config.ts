@@ -35,11 +35,17 @@ export default buildConfig({
     },
   }),
   sharp,
-  cors: ['http://localhost:3000'],
-  csrf: ['http://localhost:3000'],
+  cors: [
+    'http://localhost:3000',
+    'https://hanoman-website-mirror.vercel.app/',
+  ],
+  csrf: [
+    'http://localhost:3000',
+    'https://hanoman-website-mirror.vercel.app/',
+  ],
   plugins: [
     vercelBlobStorage({
-      enabled: process.env.NODE_ENV === 'test',
+      enabled: true,
       collections: {
         media: true, // Aktifkan untuk collection 'media'
       },
