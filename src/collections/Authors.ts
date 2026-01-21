@@ -6,6 +6,9 @@ export const Authors: CollectionConfig = {
     useAsTitle: 'name',
     defaultColumns: ['name', 'socialMediaLink'],
   },
+  access: {
+    read: () => true,
+  },
   fields: [
     {
       name: 'name',

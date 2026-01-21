@@ -38,11 +38,11 @@ export default buildConfig({
   cors: '*',
   plugins: [
     vercelBlobStorage({
-      enabled: true,
+      enabled: process.env.NODE_ENV === 'test',
       collections: {
         media: true, // Aktifkan untuk collection 'media'
       },
-      token: process.env.BLOB_READ_WRITE_TOKEN, // Nanti didapat dari dashboard Vercel
+      token: process.env.BLOB_READ_WRITE_TOKEN || '', // Nanti didapat dari dashboard Vercel
     }),
   ],
 })
