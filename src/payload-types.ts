@@ -73,6 +73,7 @@ export interface Config {
     posts: Post;
     clients: Client;
     careers: Career;
+    gallery: Gallery;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -86,6 +87,7 @@ export interface Config {
     posts: PostsSelect<false> | PostsSelect<true>;
     clients: ClientsSelect<false> | ClientsSelect<true>;
     careers: CareersSelect<false> | CareersSelect<true>;
+    gallery: GallerySelect<false> | GallerySelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -268,6 +270,17 @@ export interface Career {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gallery".
+ */
+export interface Gallery {
+  id: number;
+  image: number | Media;
+  caption: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -313,6 +326,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'careers';
         value: number | Career;
+      } | null)
+    | ({
+        relationTo: 'gallery';
+        value: number | Gallery;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -462,6 +479,16 @@ export interface CareersSelect<T extends boolean = true> {
       };
   isUrgentlyHiring?: T;
   jobCategory?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gallery_select".
+ */
+export interface GallerySelect<T extends boolean = true> {
+  image?: T;
+  caption?: T;
   updatedAt?: T;
   createdAt?: T;
 }
