@@ -39,7 +39,8 @@ export default buildConfig({
   cors: '*',
   plugins: [
     vercelBlobStorage({
-      enabled: process.env.NODE_ENV === 'test',
+      enabled: true,
+      // enabled: process.env.NODE_ENV === 'test',
       collections: {
         media: true, // Aktifkan untuk collection 'media'
       },
