@@ -37,6 +37,8 @@ export default buildConfig({
   }),
   sharp,
   cors: '*',
+  // Rate limiting is implemented in src/middleware.ts
+  // Configuration: 500 requests per 15 minutes, trustProxy: true
   plugins: [
     vercelBlobStorage({
       enabled: true,

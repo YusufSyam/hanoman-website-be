@@ -8,7 +8,10 @@ export const Posts: CollectionConfig = {
     defaultColumns: ['title', 'type', 'category', 'publishedDate'],
   },
   access: {
-    read: () => true,
+    read: () => true, // Public read
+    create: ({ req: { user } }) => Boolean(user), // Only authenticated users (admin)
+    update: ({ req: { user } }) => Boolean(user), // Only authenticated users (admin)
+    delete: ({ req: { user } }) => Boolean(user), // Only authenticated users (admin)
   },
   fields: [
     {
