@@ -65,3 +65,29 @@ That's it! The Docker instance will help you get up and running quickly while al
 ## Questions
 
 If you have any issues or questions, reach out to us on [Discord](https://discord.com/invite/payload) or start a [GitHub discussion](https://github.com/payloadcms/payload/discussions).
+
+## Contact Endpoint
+
+This project exposes `POST /api/contact` for the frontend Contact Us form.
+
+### Required payload
+
+- `name` (string, required)
+- `email` (string, required, valid email format)
+- `phone` (string, optional)
+- `message` (string, required)
+
+The endpoint trims all string fields and validates required values before sending an email to your internal team.
+
+### Environment variables
+
+Set these variables to enable contact email delivery:
+
+- `CONTACT_TO_EMAIL` - destination email for incoming contact messages
+- `FRONTEND_ORIGIN` - allowed frontend origin for CORS (for cross-origin requests)
+- `SMTP_HOST`
+- `SMTP_PORT`
+- `SMTP_SECURE` (`true` or `false`)
+- `SMTP_USER`
+- `SMTP_PASS`
+- `SMTP_FROM_EMAIL` (optional, falls back to `SMTP_USER`)
