@@ -41,8 +41,8 @@ export default buildConfig({
   // Configuration: 500 requests per 15 minutes, trustProxy: true
   plugins: [
     vercelBlobStorage({
-      enabled: true,
-      // enabled: process.env.NODE_ENV === 'test',
+      // enabled: true,
+      enabled: process.env.NODE_ENV === 'test',
       collections: {
         media: true, // Aktifkan untuk collection 'media'
       },

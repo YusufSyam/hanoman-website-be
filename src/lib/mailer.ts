@@ -7,7 +7,9 @@ type SendEmailInput = {
   replyTo?: string
 }
 
-let transporter: nodemailer.Transporter | null = null
+type MailTransporter = ReturnType<typeof nodemailer.createTransport>
+
+let transporter: MailTransporter | null = null
 
 function getRequiredEnv(name: string): string {
   const value = process.env[name]?.trim()
@@ -19,7 +21,7 @@ function getRequiredEnv(name: string): string {
   return value
 }
 
-function getTransporter(): nodemailer.Transporter {
+function getTransporter(): MailTransporter {
   if (transporter) {
     return transporter
   }

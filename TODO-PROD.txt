@@ -2,7 +2,10 @@
 1. setel ulang cors dan csrf
 2. buat dokumentasi security
 3. buat dokumentasi banyak-banyak
+4. docker compose --env-file .env -f docker-compose.yml up -d --build
 
+docker compose --profile seed run --rm seed
+docker compose --profile seed run --rm seed sh -c "corepack enable && corepack prepare pnpm@10.33.0 --activate && pnpm seed"
 
 
 

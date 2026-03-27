@@ -212,11 +212,10 @@ async function uploadImage(
 async function seed() {
     console.log('🌱 Starting seed process...\n')
 
-    // Initialize Payload
-    const payloadConfig = await config
-    const payload = await getPayload({ config: payloadConfig })
-
     try {
+        const payloadConfig = await config
+        const payload = await getPayload({ config: payloadConfig })
+
         // Reset collections (optional - uncomment if you want to clear existing data)
         console.log('🗑️  Clearing existing data...')
         try {
@@ -344,14 +343,16 @@ async function seed() {
         }
 
         console.log('✨ Seed process completed successfully!')
+        process.exit(0)
     } catch (error) {
         console.error('❌ Seed process failed:', error)
         process.exit(1)
     }
-
-    process.exit(0)
 }
 
 // Run seed
-seed()
+seed().catch((error) => {
+    console.error('❌ Seed process failed:', error)
+    process.exit(1)
+})
 
