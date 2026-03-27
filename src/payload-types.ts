@@ -215,6 +215,7 @@ export interface Post {
     [k: string]: unknown;
   };
   author: number | Author;
+  readTime?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -440,6 +441,7 @@ export interface PostsSelect<T extends boolean = true> {
   publishedDate?: T;
   content?: T;
   author?: T;
+  readTime?: T;
   updatedAt?: T;
   createdAt?: T;
 }

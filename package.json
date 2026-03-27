@@ -28,6 +28,7 @@
     "dotenv": "16.4.7",
     "graphql": "^16.8.1",
     "next": "15.4.10",
+    "nodemailer": "^8.0.1",
     "payload": "3.70.0",
     "react": "19.2.1",
     "react-dom": "19.2.1",
