@@ -1,5 +1,4 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
-import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
 import { buildConfig } from 'payload'
@@ -16,6 +15,8 @@ import { Gallery } from './collections/Gallery'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+/** Upload collection `media` uses Payload default local storage (`./media` relative to the app cwd). */
 
 export default buildConfig({
   admin: {
@@ -39,14 +40,4 @@ export default buildConfig({
   cors: '*',
   // Rate limiting is implemented in src/middleware.ts
   // Configuration: 500 requests per 15 minutes, trustProxy: true
-  plugins: [
-    vercelBlobStorage({
-      // enabled: true,
-      enabled: process.env.NODE_ENV === 'test',
-      collections: {
-        media: true, // Aktifkan untuk collection 'media'
-      },
-      token: process.env.BLOB_READ_WRITE_TOKEN || '', // Nanti didapat dari dashboard Vercel
-    }),
-  ],
 })

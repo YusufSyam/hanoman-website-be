@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import { readFileSync, statSync } from 'fs'
+import { convertMarkdownToLexical, editorConfigFactory } from '@payloadcms/richtext-lexical'
 import { getPayload } from 'payload'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -9,11 +10,14 @@ import config from '../payload.config'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
+/** One upload per filename; reused by clients, careers, posts, gallery, and author. */
+const mediaByFile = new Map<string, number>()
+
 // Data Careers
 const careers = [
     {
         name: 'Code Warrior',
-        imageFile: 'news1.png', // Asumsi file ini ada di folder seed-assets
+        imageFile: 'news1.png',
         requirements: [
             'Resourceful, communicative, fast learner, innovative, and good team player',
             'Hands on experience with Java EE',
@@ -144,6 +148,141 @@ const clients = [
     },
 ]
 
+const postsSeed = [
+    {
+        type: 'news' as const,
+        category: 'Teknologi',
+        title: 'Perbankan Indonesia Genjot Adopsi Cloud dan Keamanan Siber',
+        imageFile: 'news1.png',
+        excerpt:
+            'Lembaga keuangan mempercepat modernisasi core banking sambil memperketat tata kelola risiko siber dan kepatuhan data.',
+        publishedDate: '2025-02-10T02:00:00.000Z',
+        markdown: `## Ringkasan
+
+**Jakarta** — Transformasi digital di sektor perbankan nasional masuk babak baru: institusi tidak hanya memigrasikan beban kerja ke *cloud*, tetapi juga merancang ulang arsitektur keamanan agar konsisten dengan regulasi dan ekspektasi nasabah.
+
+## Poin Utama
+
+- Peningkatan investasi pada observabilitas dan deteksi ancaman berbasis perilaku
+- Standarisasi pipeline rilis untuk mengurangi *drift* konfigurasi antar lingkungan
+- Kolaborasi lintas divisi antara IT, risiko, dan kepatuhan
+
+## Analisis
+
+Menurut praktisi industri, tantangan terbesar bukan pada alat, melainkan pada disiplin proses: dokumentasi perubahan, uji regresi otomatis, dan mekanisme *rollback* yang dapat diaudit.
+
+> "Keamanan bukan fitur tambahan; ia harus menjadi bagian dari definisi selesainya sebuah fitur," demikian ringkasan dari diskusi panel internal.
+
+## Tautan terkait
+
+Baca juga [panduan baseline keamanan aplikasi](https://owasp.org) untuk referensi praktik umum.
+
+---
+
+*Narasi ini disusun untuk keperluan demonstrasi konten editorial pada lingkungan pengembangan.*`,
+    },
+    {
+        type: 'blog' as const,
+        category: 'Opini',
+        title: 'Membangun Budaya DevSecOps di Tim Produksi',
+        imageFile: 'news2.jpeg',
+        excerpt:
+            'Integrasi keamanan sejak awal siklus pengembangan membutuhkan kejelasan peran, metrik, dan ruang aman untuk eksperimen.',
+        publishedDate: '2025-02-18T04:30:00.000Z',
+        markdown: `## Mengapa budaya lebih menentukan daripada alat
+
+Tim yang sehat memisahkan **akuntabilitas** dari **salah-sasaran**: temuan kerentanan menjadi input perencanaan, bukan ajang mencari kambing hitam.
+
+### Tiga praktik yang sering terabaikan
+
+1. *Threat modeling* ringkas di awal fitur — cukup satu halaman, asal konsisten
+2. *Security champions* per squad — jembatan antara dev dan tim keamanan
+3. Metrik yang masuk akal: MTTD/MTTR insiden, bukan hanya jumlah temuan
+
+## Studi kasus fiktif
+
+Sebuah tim backend mengurangi insiden konfigurasi dengan menerapkan *policy-as-code* pada pipeline CI/CD. Hasilnya, perubahan infrastruktur dapat ditinjau seperti kode aplikasi.
+
+---
+
+Paragraf penutup: DevSecOps berhasil ketika insinyur merasa **dibantu**, bukan diawasi.`,
+    },
+    {
+        type: 'news' as const,
+        category: 'Perusahaan',
+        title: 'Hanoman Perluas Kolaborasi dengan Mitra Strategis Sektor Publik',
+        imageFile: 'news3.jpeg',
+        excerpt:
+            'Inisiatif baru menekankan interoperabilitas sistem dan peningkatan layanan berbasis data bagi masyarakat dan pelaku usaha.',
+        publishedDate: '2025-03-01T01:15:00.000Z',
+        markdown: `## Siaran Pers (contoh)
+
+**Jakarta** — Kemitraan strategis ini fokus pada tiga garis besar: integrasi layanan, peningkatan kualitas data, dan penguatan kapasitas sumber daya manusia di lapangan.
+
+### Rencana aksi
+
+- Fase persiapan: penyelarasan *data dictionary* dan hak akses
+- Fase implementasi: pilot terbatas dengan *feedback loop* mingguan
+- Fase stabilisasi: dokumentasi operasional dan transfer pengetahuan
+
+## Kutipan
+
+> Kolaborasi berkelanjutan membutuhkan transparansi target dan metrik keberhasilan yang disepakati bersama.
+
+### Daftar pihak (ilustrasi)
+
+- Tim program dan manajemen risiko
+- Unit teknis lapangan
+- Mitra ekosistem dan penyedia infrastruktur
+
+---
+
+Informasi lebih lanjut akan diumumkan melalui kanal resmi perusahaan.`,
+    },
+    {
+        type: 'blog' as const,
+        category: 'Analisis',
+        title: 'Tren AI di Ruang Kerja: Antara Efisiensi dan Tata Kelola Data',
+        imageFile: 'news4.png',
+        excerpt:
+            'Penerapan asisten AI menuntut kebijakan penggunaan yang jelas, audit log, dan kesadaran privasi di seluruh lini organisasi.',
+        publishedDate: '2025-03-12T03:45:00.000Z',
+        markdown: `## Lanskap saat ini
+
+Organisasi bereksperimen dengan **asisten penulisan**, **ringkasan dokumen**, dan **klasifikasi tiket** dukungan. Manfaatnya nyata, namun risiko kebocoran data sensitif ikut meningkat.
+
+## Checklist tata kelola (ringkas)
+
+- [ ] Klasifikasi data: apa yang boleh masuk ke model publik vs internal
+- [ ] Log penggunaan: siapa, kapan, konteks permintaan
+- [ ] Pelatihan staf: penggunaan yang etis dan kebijakan sanksi ringan
+
+## Opini
+
+> AI paling aman ketika diposisikan sebagai *co-pilot* dengan batasan teknis dan organisasi yang eksplisit.
+
+### Baca juga
+
+Referensi umum: [Prinsip AI yang manusiawi](https://www.unesco.org/en/artificial-intelligence/recommendation-ethics) (contoh tautan eksternal).
+
+---
+
+*Artikel ini bersifat ilustratif untuk pengujian tampilan rich text.*`,
+    },
+]
+
+/** Gallery memakai media yang sama dengan unggahan clients/careers (sudah di-cache). */
+const gallerySeed = [
+    { imageFile: 'news1.png', caption: 'Sesi kolaborasi tim teknologi dan bisnis' },
+    { imageFile: 'news2.jpeg', caption: 'Workshop pengalaman pengguna dan desain produk' },
+    { imageFile: 'news3.jpeg', caption: 'Kunjungan lapangan bersama mitra strategis' },
+    { imageFile: 'news4.png', caption: 'Pembahasan arsitektur dan tata kelola rilis' },
+    { imageFile: 'btn.png', caption: 'Logo mitra: layanan perbankan nasional' },
+    { imageFile: 'bii.png', caption: 'Kolaborasi di sektor jasa keuangan' },
+    { imageFile: 'tsel.png', caption: 'Solusi untuk pelanggan korporat dan industri' },
+    { imageFile: 'hpm.jpg', caption: 'Kemitraan di sektor manufaktur dan distribusi' },
+]
+
 /**
  * Generate slug from name
  */
@@ -155,7 +294,7 @@ function generateSlug(name: string): string {
 }
 
 /**
- * Upload image file to Media collection
+ * Upload image file to Media collection (no cache — use ensureMedia instead).
  */
 async function uploadImage(
     payload: Awaited<ReturnType<typeof getPayload>>,
@@ -164,7 +303,6 @@ async function uploadImage(
     const seedAssetsPath = path.resolve(dirname, '../seed-assets', filename)
 
     try {
-        // Check if file exists
         if (!statSync(seedAssetsPath).isFile()) {
             throw new Error(`File not found: ${seedAssetsPath}`)
         }
@@ -172,7 +310,6 @@ async function uploadImage(
         const fileBuffer = readFileSync(seedAssetsPath)
         const fileExtension = path.extname(filename).slice(1).toLowerCase()
 
-        // Determine MIME type
         const mimeTypes: Record<string, string> = {
             jpg: 'image/jpeg',
             jpeg: 'image/jpeg',
@@ -198,12 +335,37 @@ async function uploadImage(
             },
         })
 
-        // Convert ID to number (Payload uses number IDs for PostgreSQL)
         return typeof media.id === 'number' ? media.id : Number(media.id)
     } catch (error) {
         console.error(`Error uploading ${filename}:`, error)
         throw error
     }
+}
+
+async function ensureMedia(
+    payload: Awaited<ReturnType<typeof getPayload>>,
+    filename: string,
+): Promise<number> {
+    const existing = mediaByFile.get(filename)
+    if (existing !== undefined) {
+        return existing
+    }
+    const id = await uploadImage(payload, filename)
+    mediaByFile.set(filename, id)
+    return id
+}
+
+async function lexicalFromMarkdown(
+    sanitizedConfig: Awaited<typeof config>,
+    markdown: string,
+): Promise<ReturnType<typeof convertMarkdownToLexical>> {
+    const editorConfig = await editorConfigFactory.default({
+        config: sanitizedConfig,
+    })
+    return convertMarkdownToLexical({
+        editorConfig,
+        markdown,
+    })
 }
 
 /**
@@ -216,39 +378,30 @@ async function seed() {
         const payloadConfig = await config
         const payload = await getPayload({ config: payloadConfig })
 
-        // Reset collections (optional - uncomment if you want to clear existing data)
         console.log('🗑️  Clearing existing data...')
-        try {
-            const existingCareers = await payload.find({
-                collection: 'careers',
-                limit: 1000,
-            })
-            for (const career of existingCareers.docs) {
-                await payload.delete({
-                    collection: 'careers',
-                    id: career.id,
+        const deleteCollection = async (slug: 'posts' | 'gallery' | 'careers' | 'clients' | 'authors') => {
+            try {
+                const res = await payload.find({
+                    collection: slug,
+                    limit: 1000,
                 })
+                for (const doc of res.docs) {
+                    await payload.delete({
+                        collection: slug,
+                        id: doc.id,
+                    })
+                }
+                console.log(`   ✓ Deleted ${res.docs.length} existing ${slug}`)
+            } catch {
+                console.log(`   ⚠ No existing ${slug} to delete`)
             }
-            console.log(`   ✓ Deleted ${existingCareers.docs.length} existing careers`)
-        } catch (error) {
-            console.log('   ⚠ No existing careers to delete')
         }
 
-        try {
-            const existingClients = await payload.find({
-                collection: 'clients',
-                limit: 1000,
-            })
-            for (const client of existingClients.docs) {
-                await payload.delete({
-                    collection: 'clients',
-                    id: client.id,
-                })
-            }
-            console.log(`   ✓ Deleted ${existingClients.docs.length} existing clients`)
-        } catch (error) {
-            console.log('   ⚠ No existing clients to delete')
-        }
+        await deleteCollection('posts')
+        await deleteCollection('gallery')
+        await deleteCollection('careers')
+        await deleteCollection('clients')
+        await deleteCollection('authors')
 
         try {
             const existingMedia = await payload.find({
@@ -262,13 +415,14 @@ async function seed() {
                 })
             }
             console.log(`   ✓ Deleted ${existingMedia.docs.length} existing media files`)
-        } catch (error) {
+        } catch {
             console.log('   ⚠ No existing media to delete')
         }
 
+        mediaByFile.clear()
+
         console.log('\n📤 Seeding Clients...\n')
 
-        // Seed Clients
         for (const clientData of clients) {
             try {
                 if (!clientData.imageFile) {
@@ -277,7 +431,7 @@ async function seed() {
                 }
 
                 console.log(`   📤 Uploading image for ${clientData.name}...`)
-                const mediaId = await uploadImage(payload, clientData.imageFile)
+                const mediaId = await ensureMedia(payload, clientData.imageFile)
 
                 console.log(`   ✅ Creating client: ${clientData.name}`)
                 await payload.create({
@@ -302,14 +456,13 @@ async function seed() {
 
         console.log('📤 Seeding Careers...\n')
 
-        // Seed Careers
         for (const careerData of careers) {
             try {
                 let mediaId: number | undefined
 
                 if (careerData.imageFile) {
-                    console.log(`   📤 Uploading image for ${careerData.name}...`)
-                    mediaId = await uploadImage(payload, careerData.imageFile)
+                    console.log(`   📤 Ensuring media for ${careerData.name}...`)
+                    mediaId = await ensureMedia(payload, careerData.imageFile)
                 }
 
                 const slug = generateSlug(careerData.name)
@@ -342,7 +495,69 @@ async function seed() {
             }
         }
 
-        console.log('✨ Seed process completed successfully!')
+        console.log('📤 Seeding Author...\n')
+
+        const authorImageId = await ensureMedia(payload, 'yusuf.jpeg')
+        const authorDoc = await payload.create({
+            collection: 'authors',
+            data: {
+                name: 'muh yusuf syam',
+                image: authorImageId,
+                description:
+                    'Pengembang perangkat lunak dan kontributor teknis; tertarik pada arsitektur web, DX, dan kolaborasi lintas tim.',
+                socialMediaLink: 'https://www.linkedin.com/in/muh-yusuf-syam/',
+            },
+        })
+        const authorId = typeof authorDoc.id === 'number' ? authorDoc.id : Number(authorDoc.id)
+        console.log(`   ✓ Author created: muh yusuf syam (id: ${authorId})\n`)
+
+        console.log('📤 Seeding Posts...\n')
+
+        for (const post of postsSeed) {
+            try {
+                const featuredId = await ensureMedia(payload, post.imageFile)
+                const slug = generateSlug(post.title)
+                const content = await lexicalFromMarkdown(payloadConfig, post.markdown)
+
+                await payload.create({
+                    collection: 'posts',
+                    data: {
+                        type: post.type,
+                        category: post.category,
+                        title: post.title,
+                        slug,
+                        image: featuredId,
+                        excerpt: post.excerpt,
+                        publishedDate: post.publishedDate,
+                        content,
+                        author: authorId,
+                    },
+                })
+                console.log(`   ✓ Post: ${post.title}`)
+            } catch (error) {
+                console.error(`   ✗ Error seeding post "${post.title}":`, error)
+            }
+        }
+
+        console.log('\n📤 Seeding Gallery...\n')
+
+        for (const item of gallerySeed) {
+            try {
+                const imageId = await ensureMedia(payload, item.imageFile)
+                await payload.create({
+                    collection: 'gallery',
+                    data: {
+                        image: imageId,
+                        caption: item.caption,
+                    },
+                })
+                console.log(`   ✓ Gallery: ${item.caption.slice(0, 48)}…`)
+            } catch (error) {
+                console.error(`   ✗ Error seeding gallery "${item.caption}":`, error)
+            }
+        }
+
+        console.log('\n✨ Seed process completed successfully!')
         process.exit(0)
     } catch (error) {
         console.error('❌ Seed process failed:', error)
@@ -350,9 +565,7 @@ async function seed() {
     }
 }
 
-// Run seed
 seed().catch((error) => {
     console.error('❌ Seed process failed:', error)
     process.exit(1)
 })
-

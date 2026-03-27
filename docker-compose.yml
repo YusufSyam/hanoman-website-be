@@ -7,6 +7,10 @@ services:
     restart: unless-stopped
     ports:
       - '3000:3000'
+    # Seed (and local uploads) write files to ./media on the host. The app image has no project
+    # checkout — without this mount, DB rows point to paths like /app/media/*.png that do not exist.
+    volumes:
+      - ./media:/app/media
     depends_on:
       postgres:
         condition: service_healthy
@@ -48,6 +52,7 @@ services:
       - .env
     environment:
       NODE_ENV: development
+      CI: "true"
     depends_on:
       postgres:
         condition: service_healthy
