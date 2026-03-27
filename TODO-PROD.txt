@@ -1,0 +1,54 @@
+(saat sudah di prod)
+1. setel ulang cors dan csrf
+2. buat dokumentasi security
+3. buat dokumentasi banyak-banyak
+
+
+
+
+
+
+
+
+
+
+-----
+@src/payload.config.ts
+@src/collections/Users.ts
+@src/collections/Posts.ts
+@src/collections/Careers.ts
+@src/collections/Clients.ts
+@src/collections/Media.ts
+@src/collections/Gallery.ts (jika ada)
+
+Saya ingin meningkatkan keamanan Backend Payload CMS saya. Tolong audit dan terapkan 3 lapisan keamanan berikut pada file-file di atas. 
+
+Jika konfigurasi sudah ada, pastikan nilainya sesuai dengan standar di bawah. Jika belum ada, tolong tambahkan.
+
+### 1. Access Control (Pada setiap file Collection)
+Tolong ubah property `access` agar mengikuti aturan "Public Read, Admin Write" untuk konten umum, dan "Private" untuk user.
+
+A. Untuk Collection Public (`Posts`, `Careers`, `Clients`, `Media`, `Gallery`):
+   - `read`: `() => true` (Terbuka untuk public/frontend).
+   - `create`, `update`, `delete`: Hanya boleh Admin (User yang logged in). Gunakan helper: `({ req: { user } }) => Boolean(user)`.
+
+B. Untuk Collection Sensitive (`Users`):
+   - `read`: Hanya Admin atau User itu sendiri.
+   - `create`, `update`, `delete`: HANYA Admin. Pastikan tidak ada celah `create: () => true` (Public Registration harus dimatikan).
+
+### 2. Rate Limiting (Pada `src/payload.config.ts`)
+Tambahkan konfigurasi `rateLimit` di dalam `buildConfig`.
+- Set `window` ke 15 menit.
+- Set `max` limit ke 500 request.
+- PENTING: Set `trustProxy: true` (Karena saya deploy di Vercel/Behind Proxy).
+
+### 3. Brute Force Protection (Pada `src/collections/Users.ts`)
+Modifikasi object `auth` pada collection Users untuk mencegah brute force login.
+- `lockTime`: 20 menit (dalam milliseconds).
+- `maxLoginAttempts`: 5 kali.
+- `cookies`: Tambahkan konfigurasi cookie aman:
+  - `secure`: true (atau logic `process.env.NODE_ENV === 'production'`).
+  - `sameSite`: 'strict' atau 'lax'.
+  - `domain`: Ambil dari `process.env.COOKIE_DOMAIN` (opsional, handle jika undefined).
+
+Tolong implementasikan perubahan ini dengan rapi dan jangan menghapus field/config lain yang sudah ada sebelumnya.

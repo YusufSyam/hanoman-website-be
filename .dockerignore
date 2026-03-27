@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.github
+.cursor
+dist
+coverage
+*.log
+README.md
+TODO-PROD.txt
+test.env
+tests
