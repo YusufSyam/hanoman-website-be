@@ -54,7 +54,16 @@ docker compose --env-file .env -f docker-compose.yml up -d
 Pastikan:
 
 - `.env` berisi `DATABASE_URL`, `PAYLOAD_SECRET`, kredensial Postgres, dll.
+- **`DATABASE_URL` di dalam Docker** harus memakai hostname **`postgres`** (nama service di Compose), bukan `127.0.0.1`, agar container `payload` bisa konek ke DB.
 - Folder **`media/`** di host ter-mount ke container (lihat `docker-compose.yml`) agar upload media tidak hilang.
+
+**Deploy pertama / database baru:** dengan `NODE_ENV=production`, Payload **tidak** menjalankan push schema otomatis. Setelah Postgres sehat, jalankan sekali (dari folder backend di VPS):
+
+```bash
+docker compose --profile db-push run --rm db-push
+```
+
+Atau dari mesin yang bisa reach DB dengan env yang sama: `pnpm run db:push`. Baru setelah tabel ada, buka admin dan buat user pertama.
 
 Uji cepat dari VPS:
 
@@ -195,6 +204,9 @@ server {
     listen 80;
     server_name api.example.com;
 
+    # Admin upload media — naikkan jika perlu (default Nginx 1m sering terlalu kecil)
+    client_max_body_size 50M;
+
     location / {
         proxy_pass http://127.0.0.1:3000;
         proxy_http_version 1.1;
@@ -204,6 +216,8 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
     }
 }
 ```
@@ -217,6 +231,8 @@ server {
     listen 80;
     server_name www.example.com example.com;
 
+    client_max_body_size 20M;
+
     location / {
         proxy_pass http://127.0.0.1:3001;
         proxy_http_version 1.1;
@@ -226,6 +242,7 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+        proxy_read_timeout 120s;
     }
 }
 ```
@@ -272,10 +289,37 @@ Port **3000** dan **3001** tidak perlu dibuka ke publik jika hanya diakses lewat
 
 ---
 
-## 8. CORS dan form kontak
+## 8. Backend: URL publik, CORS, CSRF, dan form kontak
 
-- Backend Payload mengatur **`cors: '*'`** di `payload.config.ts`; untuk API umum biasanya cukup.
-- Endpoint **`POST /api/contact`** memakai **`FRONTEND_ORIGIN`** — set ke origin frontend production, mis. `https://www.example.com`, agar preflight CORS konsisten.
+Konfigurasi aktual ada di `src/payload.config.ts` (bukan `cors: '*'`).
+
+### 8.1 `PAYLOAD_SERVER_URL` (`.env` backend)
+
+Set ke URL publik API, **tanpa** slash di akhir, mis.:
+
+```env
+PAYLOAD_SERVER_URL=https://api.example.com
+```
+
+Ini dipakai Payload untuk admin, redirect, dan perilaku URL absolut. Setelah mengubahnya, **build ulang image** dan `docker compose up -d --build`.
+
+### 8.2 `trustedBrowserOrigins` (kode backend)
+
+Array **`trustedBrowserOrigins`** dipakai untuk **`cors`** dan **`csrf`**. Origin browser yang mengakses REST/GraphQL atau mengirim cookie admin **harus** terdaftar, mis.:
+
+- `https://www.example.com` (situs frontend)
+- `https://example.com` (jika dipakai)
+- `https://api.example.com` (jika admin dibuka dari subdomain yang sama)
+
+Tambahkan origin demo/production di array itu, commit, lalu deploy image baru. Jika origin tidak ada di daftar, fetch dari frontend atau login admin bisa gagal dengan error CORS/CSRF.
+
+### 8.3 `FRONTEND_ORIGIN` (`.env` backend)
+
+Endpoint **`POST /api/contact`** memakai **`FRONTEND_ORIGIN`** untuk header CORS. Isi persis origin frontend, mis. `https://www.example.com` (skema + host, tanpa path).
+
+### 8.4 Cookie admin (opsional)
+
+Jika admin di `api.example.com` dan frontend di `www.example.com`, cookie default **scoped per host**. Untuk skenario subdomain kompleks, pertimbangkan `COOKIE_DOMAIN` di `.env` (lihat `src/collections/Users.ts`) — hanya set jika Anda paham dampaknya terhadap keamanan cookie.
 
 ---
 
@@ -307,7 +351,11 @@ docker compose --env-file .env -f docker-compose.yml up -d --build
 | 502 Bad Gateway ke FE | `pm2 status`, `curl http://127.0.0.1:3001/` |
 | 502 ke API | `docker compose ps`, `curl http://127.0.0.1:3000/api/` |
 | Frontend tidak bisa fetch API | `NEXT_PUBLIC_*` salah atau belum rebuild; URL harus **https** setelah Certbot |
+| CORS / CSRF / fetch API dari browser gagal | Tambahkan origin frontend (dan API jika perlu) ke `trustedBrowserOrigins` di backend; set `PAYLOAD_SERVER_URL`; deploy ulang image backend |
+| Admin redirect aneh atau mixed content | `PAYLOAD_SERVER_URL` harus `https://...` sama dengan domain Nginx |
+| `relation "users" does not exist` | DB baru tanpa schema: jalankan `docker compose --profile db-push run --rm db-push` (lihat §3) |
 | Media backend 404 | Volume `./media` di Docker dan isi folder `media/` di host |
+| Upload admin gagal (413) | Naikkan `client_max_body_size` di Nginx untuk `api.*` |
 
 ---
 
@@ -319,4 +367,14 @@ docker compose --env-file .env -f docker-compose.yml up -d --build
 | Frontend (PM2) | `3001` | Via Nginx `www.example.com` |
 | PostgreSQL (Docker) | `5432` (hanya jika perlu; jangan expose ke internet tanpa kebutuhan) | — |
 
-Dokumen ini hanya menjelaskan **frontend + PM2 + Nginx**; manajemen secret, backup DB, dan hardening server mengikuti kebijakan Anda.
+## 12. Checklist singkat sebelum dianggap selesai
+
+- [ ] Backend: `.env` lengkap (`PAYLOAD_SECRET`, `DATABASE_URL` dengan host `postgres`, `PAYLOAD_SERVER_URL`, `FRONTEND_ORIGIN` untuk contact).
+- [ ] Backend: origin production ada di `trustedBrowserOrigins` + image sudah di-build ulang.
+- [ ] Deploy pertama: `db-push` sudah dijalankan jika DB kosong.
+- [ ] Frontend: `.env.production` + `pnpm build` setelah setiap ubah `NEXT_PUBLIC_*`.
+- [ ] Nginx: SSL aktif, `client_max_body_size` cukup untuk upload admin.
+- [ ] Firewall: hanya SSH + HTTP(S); port 3000/3001 tidak perlu publik.
+- [ ] `chmod 600 .env` (backend & frontend) di server.
+
+Dokumen ini fokus ke **frontend + PM2 + Nginx** dan integrasi dengan backend Docker; backup DB, rotasi secret, dan hardening lanjutan mengikuti kebijakan Anda.

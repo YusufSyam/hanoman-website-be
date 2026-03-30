@@ -30,6 +30,7 @@ const trustedBrowserOrigins: string[] = [
   'http://127.0.0.1:3001',
   'https://hanoman.co.id',
   'https://www.hanoman.co.id',
+  'https://api.hanoman.co.id',
 ]
 
 /** URL publik backend (mis. https://api.hanoman.co.id). Kosongkan di lokal jika akses lewat localhost:3000. */
