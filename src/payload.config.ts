@@ -31,6 +31,8 @@ const trustedBrowserOrigins: string[] = [
   'https://hanoman.co.id',
   'https://www.hanoman.co.id',
   'https://api.hanoman.co.id',
+  'https://hanoman-website-mirror.vercel.app',
+  'https://hanoman-website-be.vercel.app',
 ]
 
 /** URL publik backend (mis. https://api.hanoman.co.id). Kosongkan di lokal jika akses lewat localhost:3000. */
