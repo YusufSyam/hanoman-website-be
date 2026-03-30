@@ -10,6 +10,9 @@
 /.idea/*
 !/.idea/runConfigurations
 
+# editor (local / personal — team shared configs can be committed instead if you prefer)
+.vscode/
+
 # testing
 /coverage
 
