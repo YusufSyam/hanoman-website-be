@@ -228,7 +228,7 @@ export interface Client {
   name: string;
   href: string;
   logo: number | Media;
-  category: 'Banking & Finance' | 'Enterprise & Industrial' | 'Government';
+  category: 'Banking' | 'Insurance' | 'Government';
   imageHeight?: number | null;
   updatedAt: string;
   createdAt: string;

@@ -90,8 +90,8 @@ Mengambil daftar clients dengan pagination dan filtering.
 - `limit` - Jumlah item per halaman (default: 10)
 - `sort` - Sorting field (contoh: `name` untuk ascending, `-name` untuk descending)
 - `where[category][equals]` - Filter berdasarkan category:
-  - `"Banking & Finance"`
-  - `"Enterprise & Industrial"`
+  - `"Banking"`
+  - `"Insurance"`
   - `"Government"`
 - `where[name][contains]` - Search berdasarkan nama client (case-insensitive)
 - `depth` - Depth untuk populate logo relationship (default: 0, gunakan 1 untuk populate logo object)
@@ -110,7 +110,7 @@ Mengambil daftar clients dengan pagination dan filtering.
 - `name` - Client name (string)
 - `href` - Website URL (string)
 - `logo` - Media object atau ID (relationship ke `media`)
-- `category` - Category (string, salah satu dari tiga opsi di atas)
+- `category` - Category (string, salah satu dari tiga opsi di atas: `Banking`, `Insurance`, `Government`)
 - `imageHeight` - Optional image height in pixels (number)
 - `createdAt` - Creation timestamp (ISO date string)
 - `updatedAt` - Last update timestamp (ISO date string)

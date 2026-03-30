@@ -88,49 +88,49 @@ const clients = [
         href: 'http://www.btn.co.id',
         imageFile: 'btn.png',
         imageHeight: 42,
-        category: 'Banking & Finance',
+        category: 'Banking',
     },
     {
         name: 'Bank Internasional Indonesia',
         href: 'http://www.bii.co.id',
         imageFile: 'bii.png',
         imageHeight: 50,
-        category: 'Banking & Finance',
+        category: 'Banking',
     },
     {
         name: 'Bank Sinarmas',
         href: 'http://www.banksinarmas.com',
         imageFile: 'bsim.png',
         imageHeight: 42,
-        category: 'Banking & Finance',
+        category: 'Banking',
     },
     {
         name: 'Telkomsel',
         href: 'http://telkomsel.com/',
         imageFile: 'tsel.png',
         imageHeight: 56,
-        category: 'Enterprise & Industrial',
+        category: 'Insurance',
     },
     {
         name: 'Honda Prospect Motor',
         href: 'http://www.hpm.co.id',
         imageFile: 'hpm.jpg',
         imageHeight: 56,
-        category: 'Enterprise & Industrial',
+        category: 'Insurance',
     },
     {
         name: 'Bank Tabungan Negara - Syariah',
         href: 'http://www.btn.co.id/Syariah/Home.aspx',
         imageFile: 'btns1.png',
         imageHeight: 44,
-        category: 'Banking & Finance',
+        category: 'Banking',
     },
     {
         name: 'Bank Negara Indonesia',
         href: 'http://www.bni.co.id',
         imageFile: 'bni.png',
         imageHeight: 24,
-        category: 'Banking & Finance',
+        category: 'Banking',
     },
     {
         name: 'Direktorat Jenderal Bea dan Cukai',
@@ -144,7 +144,7 @@ const clients = [
         href: 'http://www.sinarmasforestry.com/Default.asp',
         imageFile: 'smf2.png',
         imageHeight: 48,
-        category: 'Enterprise & Industrial',
+        category: 'Insurance',
     },
 ]
 
@@ -441,8 +441,8 @@ async function seed() {
                         href: clientData.href,
                         logo: mediaId,
                         category: clientData.category as
-                            | 'Banking & Finance'
-                            | 'Enterprise & Industrial'
+                            | 'Banking'
+                            | 'Insurance'
                             | 'Government',
                         imageHeight: clientData.imageHeight,
                     },

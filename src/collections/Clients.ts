@@ -39,12 +39,12 @@ export const Clients: CollectionConfig = {
       required: true,
       options: [
         {
-          label: 'Banking & Finance',
-          value: 'Banking & Finance',
+          label: 'Banking',
+          value: 'Banking',
         },
         {
-          label: 'Enterprise & Industrial',
-          value: 'Enterprise & Industrial',
+          label: 'Insurance',
+          value: 'Insurance',
         },
         {
           label: 'Government',
