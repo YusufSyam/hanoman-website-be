@@ -6,7 +6,7 @@ services:
     image: hanoman-website-be:latest
     restart: unless-stopped
     ports:
-      - '3000:3000'
+      - "${PAYLOAD_BIND_IP:-127.0.0.1}:${PAYLOAD_PUBLISHED_PORT:-3000}:3000"
     # Seed (and local uploads) write files to ./media on the host. The app image has no project
     # checkout — without this mount, DB rows point to paths like /app/media/*.png that do not exist.
     volumes:
@@ -32,7 +32,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "${POSTGRES_BIND_IP:-127.0.0.1}:${POSTGRES_PUBLISHED_PORT:-5432}:5432"
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
