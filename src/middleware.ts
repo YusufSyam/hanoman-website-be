@@ -38,10 +38,44 @@ function getClientIP(request: NextRequest): string {
   return request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 'unknown'
 }
 
+function buildCspHeader(nonce: string): string {
+  const apiOrigin = process.env.PAYLOAD_SERVER_URL?.trim() || 'https://api.hanoman.co.id'
+
+  return [
+    "default-src 'self'",
+    "base-uri 'self'",
+    "object-src 'none'",
+    "frame-ancestors 'none'",
+    `script-src 'self' 'nonce-${nonce}'`,
+    "style-src 'self' 'unsafe-inline'",
+    `img-src 'self' data: blob: ${apiOrigin} https:`,
+    "font-src 'self' data:",
+    `connect-src 'self' ${apiOrigin}`,
+    "frame-src 'self' https://maps.google.com https://www.google.com",
+    'report-uri /csp-report-endpoint',
+  ].join('; ')
+}
+
+function withSecurityHeaders(response: NextResponse, nonce: string): NextResponse {
+  response.headers.set('x-nonce', nonce)
+  response.headers.set('Content-Security-Policy', buildCspHeader(nonce))
+  return response
+}
+
 export function middleware(request: NextRequest) {
-  // Only apply rate limiting to API routes
-  if (!request.nextUrl.pathname.startsWith('/api')) {
-    return NextResponse.next()
+  const nonce = crypto.randomUUID().replace(/-/g, '')
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-nonce', nonce)
+
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api')
+
+  if (!isApiRoute) {
+    const response = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    })
+    return withSecurityHeaders(response, nonce)
   }
 
   const clientIP = getClientIP(request)
@@ -57,7 +91,12 @@ export function middleware(request: NextRequest) {
       resetTime: now + RATE_LIMIT_WINDOW,
     }
     rateLimitStore.set(clientIP, rateLimit)
-    return NextResponse.next()
+    const response = NextResponse.next({
+      request: {
+        headers: requestHeaders,
+      },
+    })
+    return withSecurityHeaders(response, nonce)
   }
 
   // Increment request count
@@ -67,7 +106,7 @@ export function middleware(request: NextRequest) {
   if (rateLimit.count > RATE_LIMIT_MAX) {
     const retryAfter = Math.ceil((rateLimit.resetTime - now) / 1000)
 
-    return NextResponse.json(
+    const response = NextResponse.json(
       {
         error: 'Too Many Requests',
         message: `Rate limit exceeded. Maximum ${RATE_LIMIT_MAX} requests per ${RATE_LIMIT_WINDOW / 1000 / 60} minutes.`,
@@ -83,20 +122,25 @@ export function middleware(request: NextRequest) {
         },
       }
     )
+    return withSecurityHeaders(response, nonce)
   }
 
   // Update rate limit entry
   rateLimitStore.set(clientIP, rateLimit)
 
   // Add rate limit headers to response
-  const response = NextResponse.next()
+  const response = NextResponse.next({
+    request: {
+      headers: requestHeaders,
+    },
+  })
   response.headers.set('X-RateLimit-Limit', RATE_LIMIT_MAX.toString())
   response.headers.set('X-RateLimit-Remaining', Math.max(0, RATE_LIMIT_MAX - rateLimit.count).toString())
   response.headers.set('X-RateLimit-Reset', new Date(rateLimit.resetTime).toISOString())
 
-  return response
+  return withSecurityHeaders(response, nonce)
 }
 
 export const config = {
-  matcher: '/api/:path*',
+  matcher: ['/((?!_next/static|_next/image|favicon.ico).*)'],
 }
